@@ -13,7 +13,7 @@ Discord Rich Presence for Apple Music using WinRT APIs.
 
 - Windows 10 or later
 - Apple Music (Windows) or anything supported by [GlobalSystemMediaTransportControlsSession](https://learn.microsoft.com/en-us/uwp/api/windows.media.control.globalsystemmediatransportcontrolssession?view=winrt-26100)
-- Python 3
+- Python 3.7+
 - Discord Developer App
 - Imgur API Client ID
 
