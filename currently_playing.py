@@ -20,90 +20,82 @@ class Song:
         self.image = None
         self.ts = None
         self.playing = False
+        self.paused = None
 
     def __str__(self):
-        return f"Title: {self.title} \nArtist: {self.artist} \nAlbum: {self.album} \nImage: {self.image} \nTimestamps: {self.ts} \nPlaying: {self.playing} \n"
+        return f"Title: {self.title} \nArtist: {self.artist} \nAlbum: {self.album} \nImage: {self.image} \nTimestamps: {self.ts} \nPlaying: {self.playing} \nPause timer: {self.paused}"
+
+    def listview(self):
+        return [self.title, self.artist, self.album, self.playing]
+
+    def pause(self):
+        if self.paused is None:
+            self.paused = int(time.time())
+
+    def play(self):
+        self.paused = None
 
     async def get_info(self, difference):
         current_time = int(time.time())
-        sessions = await MediaManager.request_async()   # Setup session
-        if sessions is None:   # If no sessions available, return nothing
-            self.title = None
-            self.artist = None
-            self.album = None
-            self.image = None
-            self.ts = []
-            self.playing = False
+        sessions = await MediaManager.request_async()
+
+        # Early return if no media session available
+        if not sessions or not sessions.get_current_session():
+            self.reset()
             return
 
-        current_session = sessions.get_current_session()   # get current session
-        if current_session is None:
-            self.title = None
-            self.artist = None
-            self.album = None
-            self.image = None
-            self.ts = []
-            self.playing = False
-            return
-
+        current_session = sessions.get_current_session()
         info = current_session.get_playback_info()
-        if info is None:
-            self.title = None
-            self.artist = None
-            self.album = None
-            self.image = None
-            self.ts = []
-            self.playing = False
+
+        # Early return if no playback info
+        if not info:
+            self.reset()
             return
 
-        # Get playback info
-        if info.playback_status == PlaybackStatus.PLAYING:
-            self.playing = True
-        else:
-            self.playing = False
+        # Get playback status
+        self.playing = (info.playback_status == PlaybackStatus.PLAYING)
 
         # Get timeline information
-        timeline_properties = current_session.get_timeline_properties()
-        if timeline_properties:
-            position = int(timeline_properties.position.total_seconds())
-            end_time = int(timeline_properties.end_time.total_seconds())
+        timeline = current_session.get_timeline_properties()
+        if timeline:
+            position = int(timeline.position.total_seconds())
+            end_time = int(timeline.end_time.total_seconds())
             self.ts = [current_time - position, current_time + (end_time - position)]
         else:
             self.ts = []
 
-
-
         # Get media properties
-        media_properties = await current_session.try_get_media_properties_async()
-        if media_properties:   # always set available media properties
-            artist_album = media_properties.artist or None
-            title = media_properties.title or None
-            if self.image is None or difference:
-                self.image = media_properties.thumbnail
+        media = await current_session.try_get_media_properties_async()
+        if not media:
+            self.reset()
+            return
 
-            artist_album = artist_album or None
-            title = title or None
+        # Update thumbnail if needed
+        if self.image is None or difference:
+            self.image = media.thumbnail
 
-            if artist_album:
-                artist_album = artist_album.strip()
-                artist_album = re.sub(r" — [^—]*?['’]s Station$", "", artist_album)
+        # Parse artist and album
+        artist_album = media.artist or None
+        if artist_album:
+            artist_album = artist_album.strip()
+
+            # Remove station if present
+            artist_album = re.sub(r" — [^—]*?['’]s Station$", "", artist_album)
+
+            # If EM-dash is available to seperate albums, split it
+            if "—" in artist_album:
                 artist, album = artist_album.split("—")
-            else:
-                artist, album = None, None
-            print(artist_album)
-
-            if title:
-                self.title = title.strip()
-            if artist:
                 self.artist = artist.strip()
-            if album:
                 self.album = album.strip()
 
-        else:
-            self.title = None
-            self.artist = None
-            self.album = None
-            self.image = None
+            # If EM-dash not available define artist and album both as album
+            else:
+                self.artist = artist_album.strip()
+                self.album = artist_album.strip()
+
+        # Set title
+        if media.title:
+            self.title = media.title.strip()
 
     def convert_thumbnail(self):
         async def process_thumbnail():
@@ -112,24 +104,26 @@ class Song:
             size = stream.size
             await reader.load_async(size)
             buffer = reader.read_buffer(size)
-            image_bytes = bytes(memoryview(buffer))
-            return io.BytesIO(image_bytes)
+            return io.BytesIO(bytes(memoryview(buffer)))
 
         def upload(image):
             image.seek(0)
-            files = {'image': image}
-            headers = {'Authorization': 'Client-ID' + f" {IMGUR_CLIENT_ID}"}
-            url = "https://api.imgur.com/3/image"
-            response = requests.post(url, headers=headers, files=files)
+            headers = {'Authorization': f'Client-ID {IMGUR_CLIENT_ID}'}
+            response = requests.post(
+                "https://api.imgur.com/3/image",
+                headers=headers,
+                files={'image': image}
+            )
             if response.status_code == 200:
                 return response.json().get('data').get('link')
             else:
-                print("Upload failed:", response.status_code)
+                return str('default')
+
         if isinstance(self.image, IRandomAccessStreamReference):
             self.image = upload(asyncio.run(process_thumbnail()))
         else:
-            if self.image is None:
-                self.image = "default"
+            self.image = 'default'
+
 
     def reset(self):
         self.title = None
@@ -138,3 +132,4 @@ class Song:
         self.image = None
         self.ts = None
         self.playing = False
+        self.paused = None

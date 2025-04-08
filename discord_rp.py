@@ -1,7 +1,9 @@
 import os
+from time import sleep
+
 import discordrpc
-import time
 from dotenv import load_dotenv
+import asyncio
 
 load_dotenv()
 DISCORD_CLIENT_ID = int(os.getenv("DISCORD_CLIENT_ID"))
@@ -29,8 +31,5 @@ class RPC:
                 small_image="pause",
                 small_text="Paused",
                 act_type=2,
-                ts_start=int(time.time())
+                ts_start=info.paused,
             )
-
-
-
