@@ -13,6 +13,9 @@ load_dotenv()
 IMGUR_CLIENT_ID = os.getenv("IMGUR_CLIENT_ID")
 
 class Song:
+    """
+    Represents currently playing song and its metadata
+    """
     def __init__(self):
         self.title = None
         self.artist = None
@@ -22,20 +25,38 @@ class Song:
         self.playing = False
         self.paused = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Title: {self.title} \nArtist: {self.artist} \nAlbum: {self.album} \nImage: {self.image} \nTimestamps: {self.ts} \nPlaying: {self.playing} \nPause timer: {self.paused}"
 
-    def listview(self):
+    def listview(self) -> list:
+        """
+        Quick access to non-static information
+        :return: List containing title, artist, album, and bool of playing status
+        """
         return [self.title, self.artist, self.album, self.playing]
 
-    def pause(self):
+    def pause(self) -> None:
+        """
+        Pauses the song and begins the pause timer if not active
+        :return: None
+        """
         if self.paused is None:
             self.paused = int(time.time())
 
-    def play(self):
+    def play(self) -> None:
+        """
+        Resets the pause timer back to None
+        :return: None
+        """
         self.paused = None
 
-    async def get_info(self, difference):
+    async def get_info(self, difference: bool) -> None:
+        """
+
+        :param difference: Force update the song's thumbnail
+        :return: None
+        """
+
         current_time = int(time.time())
         sessions = await MediaManager.request_async()
 
@@ -97,8 +118,16 @@ class Song:
         if media.title:
             self.title = media.title.strip()
 
-    def convert_thumbnail(self):
-        async def process_thumbnail():
+    def convert_thumbnail(self) -> None:
+        """
+        Converts the current song's self.image to a link if its a IRandomAccessStreamReference object. Otherwise sets it to default.
+        :return: None
+        """
+        async def process_thumbnail() -> io.BytesIO:
+            """
+            Transforms IRandomAccessStreamReference into
+            :return: io.BytesIO object containing thumbnail info
+            """
             stream = await self.image.open_read_async()
             reader = DataReader(stream)
             size = stream.size
@@ -106,7 +135,12 @@ class Song:
             buffer = reader.read_buffer(size)
             return io.BytesIO(bytes(memoryview(buffer)))
 
-        def upload(image):
+        def upload(image: io.BytesIO) -> str:
+            """
+            Uploads the image to Imgur and returns the link. On any error, returns 'default' instead.
+            :param image: io.BytesIO object containing thumbnail info
+            :return: Either imgur link or 'default'
+            """
             image.seek(0)
             headers = {'Authorization': f'Client-ID {IMGUR_CLIENT_ID}'}
             response = requests.post(
@@ -125,7 +159,11 @@ class Song:
             self.image = 'default'
 
 
-    def reset(self):
+    def reset(self) -> None:
+        """
+        Resets all of the song's attributes
+        :return: None
+        """
         self.title = None
         self.artist = None
         self.album = None

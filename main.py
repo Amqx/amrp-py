@@ -1,11 +1,16 @@
-from winsdk.windows.storage.streams import IRandomAccessStreamReference
 from discord_rp import RPC
 from currently_playing import Song
+from tray import TrayIcon
 import asyncio
 import time
 import psutil
 
-def is_process_running(process_name):
+def is_process_running(process_name: str) -> bool:
+    """
+    Returns true if process_name is running
+    :param process_name: Process name
+    :return: True if running, False otherwise
+    """
     for proc in psutil.process_iter(['name']):
         if proc.info['name'] == process_name:
             return True
@@ -20,6 +25,10 @@ def main():
 
     # Define song object
     active_song = Song()
+
+    # Start tray icon
+    icon = TrayIcon()
+    icon.run()
 
     # If Apple Music is running, get the info from it
     if alive:
@@ -138,19 +147,33 @@ def main():
 
 if __name__ == '__main__':
     try:
+        # Run main script
         asyncio.run(main())
+
     except KeyboardInterrupt:
         print("-" * 30 + '\n')
         print("Shutting down")
+
         try:
-            discord.rpc.disconnect()
+            icon.quit()
         except NameError:
-            print("RPC not active! Skipped stopping RPC")
-    except SystemExit:
-        print("-" * 30 + '\n')
-        print("Shutting down")
+            print("Icon not active! Skipped stopping icon")
+
         try:
             discord.rpc.disconnect()
         except NameError:
             print("RPC not active! Skipped stopping RPC")
 
+    except SystemExit:
+        print("-" * 30 + '\n')
+        print("Shutting down")
+
+        try:
+            icon.quit()
+        except NameError:
+            print("Icon not active! Skipped stopping icon")
+
+        try:
+            discord.rpc.disconnect()
+        except NameError:
+            print("RPC not active! Skipped stopping RPC")

@@ -1,7 +1,0 @@
-- Add a tray icon! (to show app is running)
-  - Make it easier to create the .env on start (maybe with a UI window?)
-- Make the code more readable - half done?
-  - Add docstrings
-  - Tune up the code - half done? 
-- Add scrobbling
-- Buttons!

@@ -3,3 +3,5 @@ python-dotenv~=1.1.0
 discordrpc~=0.0.0
 requests~=2.32.3
 winsdk~=1.0.0b10
+pystray~=0.19.5
+pillow~=11.2.0

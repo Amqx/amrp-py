@@ -7,17 +7,17 @@ Discord Rich Presence for Apple Music using WinRT APIs.
 - Displays track title, artist, and album
 - Shows album art via Imgur uploads
 - Progress bar
-- Probably works with other clients as well (I haven't tested)
+- Tray icon for status
 
 ## Requirements
 
 - Windows 10 or later
-- Apple Music (Windows) or anything supported by [GlobalSystemMediaTransportControlsSession](https://learn.microsoft.com/en-us/uwp/api/windows.media.control.globalsystemmediatransportcontrolssession?view=winrt-26100)
+- Apple Music (Windows)
 - Python 3.7+
 - Discord Developer App
 - Imgur API Client ID
 
-## Setup
+## Build
 
 1. **Clone the repository**
     ```bash
@@ -43,7 +43,7 @@ Discord Rich Presence for Apple Music using WinRT APIs.
 
 ##  How it works
 
-Utilize's Windows Runtime APIs to get what is currently playing, specifically [GlobalSystemMediaTransportControlsSession](https://learn.microsoft.com/en-us/uwp/api/windows.media.control.globalsystemmediatransportcontrolssession?view=winrt-26100). This gives us access to:
+Utilizes Windows Runtime APIs to get what is currently playing, specifically [GlobalSystemMediaTransportControlsSession](https://learn.microsoft.com/en-us/uwp/api/windows.media.control.globalsystemmediatransportcontrolssession?view=winrt-26100). This gives us access to:
 
 - Title, Arist, Album
 - Status (Playing, Timestamps)
