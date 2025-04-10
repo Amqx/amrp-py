@@ -9,6 +9,7 @@ import time
 from dotenv import load_dotenv
 import requests
 
+
 load_dotenv()
 IMGUR_CLIENT_ID = os.getenv("IMGUR_CLIENT_ID")
 
