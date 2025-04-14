@@ -14,9 +14,15 @@ def is_process_running(process_name: str) -> bool:
     :param process_name: Process name
     :return: True if running, False otherwise
     """
-    for proc in psutil.process_iter(['name']):
-        if proc.info['name'] == process_name:
-            return True
+    try:
+        for proc in psutil.process_iter(['name']):
+            try:
+                if proc.info['name'] == process_name:
+                    return True
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
+    except Exception as e:
+        logging.error(f"Error checking processes {e}")
     return False
 
 def main():
