@@ -1,4 +1,5 @@
 import os
+import logging
 import discordrpc
 from dotenv import load_dotenv
 from currently_playing import Song
@@ -8,21 +9,33 @@ DISCORD_CLIENT_ID = int(os.getenv("DISCORD_CLIENT_ID"))
 
 class RPC:
     """
-    Class to manage Discord RPC calls
+    Class to manage Discord Rich Presence calls.
+
+    This class handles the connection to Discord and updates the rich presence
+    status based on the currently playing song.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initialize the Discord RPC connection.
+
+        Creates a new RPC connection using the Discord client ID from environment variables.
+        """
+        logging.info("Initializing Discord RPC connection")
         self.rpc = discordrpc.RPC(DISCORD_CLIENT_ID)
 
     def update_activity(self, info: Song) -> None:
         """
-        Updates Discord Rich Presence activity using Song object
+        Updates Discord Rich Presence activity using a Song object.
 
-        :param info: Song object
+        Args:
+            info: Song object containing the current song information
 
-        :return: None
+        Returns:
+            None
         """
         if info.playing:
+            logging.info(f"Updating Discord activity: Playing '{info.title}' by {info.artist}")
             self.rpc.set_activity(
                 details=info.title,
                 state=info.artist,
@@ -32,7 +45,8 @@ class RPC:
                 ts_start=info.ts[0],
                 ts_end=info.ts[1],
             )
-        elif not info.playing:
+        else:
+            logging.info(f"Updating Discord activity: Paused '{info.title}' by {info.artist}")
             self.rpc.set_activity(
                 details=info.title,
                 state=info.artist,
